@@ -1,0 +1,79 @@
+- hosts: webserver
+  tasks:
+  - file:
+      state: directory
+      path: "/dvd"
+
+  - mount:
+      path: "/dvd"
+      src: "/dev/cdrom"
+      state: mounted
+      fstype: "iso9660"
+
+  - yum_repository:
+      baseurl: "/dvd/AppStream"
+      name: "mydvd1"
+      description: "AppStream"
+      gpgcheck: no
+
+  - yum_repository:
+      baseurl: "/dvd/BaseOS"
+      name: "mydvd2"
+      description: "BaseOS"
+      gpgcheck: no
+
+  - package:
+      name: "httpd"
+      state: present
+
+  - copy:
+      dest: "/var/www/html/index.html"
+      content: "Welcome to Technical World"
+
+  - service:
+      name: "httpd"
+      state: started
+      enabled: yes
+
+  - firewalld:
+      port: "80/tcp"
+      state: enabled
+      permanent: yes
+      immediate: yes
+
+
+- hosts: load balancer
+  tasks:
+  - file:
+      state: directory
+      path: "/dvd"
+
+  - mount:
+      path: "/dvd"
+      src: "/dev/cdrom"
+      state: mounted
+      fstype: "iso9660"
+
+  - yum_repository:
+      baseurl: "/dvd/AppStream"
+      name: "mydvd1"
+      description: "AppStream"
+      gpgcheck: no
+
+  - yum_repository:
+      baseurl: "/dvd/BaseOS"
+      name: "mydvd2"
+      description: "BaseOS"
+      gpgcheck: no
+ 
+  - package:
+      name: "haproxy"
+      state: present
+
+  - template:
+      dest: /etc/haproxy/haproxy.cfg
+      src: haproxy.cfg.j2
+
+  - service:
+      name: "haproxy"
+      state: restarted
